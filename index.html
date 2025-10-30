@@ -88,12 +88,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // Configuration - Replace with your actual API key
-        const API_CONFIG = {
-            provider: 'openai', // 'openai' or 'anthropic'
-            openaiKey: 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,
-            anthropicKey: 'YOUR_ANTHROPIC_API_KEY_HERE',
-        };
+        // API calls now handled by serverless function - no keys needed here!
 
         function App() {
             const [showChat, setShowChat] = useState(false);
@@ -818,74 +813,38 @@
                 setIsLoading(true);
 
                 try {
-                    let response;
-                    
-                    if (API_CONFIG.provider === 'openai' && API_CONFIG.openaiKey !== 'YOUR_OPENAI_API_KEY_HERE') {
-                        response = await fetch('https://api.openai.com/v1/chat/completions', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${API_CONFIG.openaiKey}`
-                            },
-                            body: JSON.stringify({
-                                model: 'gpt-4',
-                                messages: [
-                                    { 
-                                        role: 'system', 
-                                        content: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.' 
-                                    },
-                                    ...messages.map(m => ({ role: m.role, content: m.content })),
-                                    { role: 'user', content: userMessage }
-                                ],
-                                max_tokens: 500,
-                                temperature: 0.7
-                            })
-                        });
+                    // Call Vercel serverless function (API key is secure on server)
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                { 
+                                    role: 'system', 
+                                    content: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.' 
+                                },
+                                ...messages.map(m => ({ role: m.role, content: m.content })),
+                                { role: 'user', content: userMessage }
+                            ]
+                        })
+                    });
 
-                        const data = await response.json();
-                        const aiMessage = data.choices[0].message.content;
-                        setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
-                        
-                    } else if (API_CONFIG.provider === 'anthropic' && API_CONFIG.anthropicKey !== 'YOUR_ANTHROPIC_API_KEY_HERE') {
-                        response = await fetch('https://api.anthropic.com/v1/messages', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-api-key': API_CONFIG.anthropicKey,
-                                'anthropic-version': '2023-06-01'
-                            },
-                            body: JSON.stringify({
-                                model: 'claude-3-5-sonnet-20241022',
-                                max_tokens: 1024,
-                                messages: [
-                                    ...messages.filter(m => m.role !== 'assistant' || m.content).map(m => ({
-                                        role: m.role === 'assistant' ? 'assistant' : 'user',
-                                        content: m.content
-                                    })),
-                                    { role: 'user', content: userMessage }
-                                ],
-                                system: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.'
-                            })
-                        });
-
-                        const data = await response.json();
-                        const aiMessage = data.content[0].text;
-                        setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
-                    } else {
-                        // Demo mode - predefined responses
-                        const demoResponse = getDemoResponse(userMessage);
-                        setTimeout(() => {
-                            setMessages(prev => [...prev, { role: 'assistant', content: demoResponse }]);
-                            setIsLoading(false);
-                        }, 1000);
-                        return;
+                    if (!response.ok) {
+                        throw new Error('API request failed');
                     }
+
+                    const data = await response.json();
+                    const aiMessage = data.choices[0].message.content;
+                    setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
+                    
                 } catch (error) {
                     console.error('Error:', error);
-                    setMessages(prev => [...prev, { 
-                        role: 'assistant', 
-                        content: 'I apologize, but I\'m having trouble connecting right now. Please fill out our contact form and our team will get back to you within 2 hours!' 
-                    }]);
+                    
+                    // Fallback to demo mode if API fails
+                    const demoResponse = getDemoResponse(userMessage);
+                    setMessages(prev => [...prev, { role: 'assistant', content: demoResponse }]);
                 }
 
                 setIsLoading(false);
