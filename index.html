@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstroSolar - Premium Solar & Battery Solutions | Victoria, Australia</title>
+    <meta name="description" content="Save up to 90% on electricity bills with premium solar panels and battery storage. Free quotes, expert installation, and Australia's best warranties.">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .chat-bubble {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .chat-container {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .calculator-card {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Configuration - Replace with your actual API key
+        const API_CONFIG = {
+            provider: 'openai', // 'openai' or 'anthropic'
+            openaiKey: 'YOUR_OPENAI_API_KEY_HERE',
+            anthropicKey: 'YOUR_ANTHROPIC_API_KEY_HERE',
+        };
+
+        function App() {
+            const [showChat, setShowChat] = useState(false);
+            const [calculatorData, setCalculatorData] = useState({
+                quarterlyBill: '',
+                solarSize: '',
+                batterySize: '',
+                hasSolar: 'no'
+            });
+            const [savingsResult, setSavingsResult] = useState(null);
+            const [formData, setFormData] = useState({
+                name: '',
+                email: '',
+                phone: '',
+                postcode: ''
+            });
+
+            return (
+                <div className="min-h-screen">
+                    {/* Navigation */}
+                    <nav className="bg-white shadow-sm fixed w-full top-0 z-50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex justify-between items-center h-16">
+                                <div className="flex items-center">
+                                    <i className="fas fa-solar-panel text-3xl gradient-text"></i>
+                                    <span className="ml-2 text-2xl font-bold gradient-text">AstroSolar</span>
+                                </div>
+                                <div className="hidden md:flex space-x-8">
+                                    <a href="#benefits" className="text-gray-700 hover:text-purple-600 transition">Benefits</a>
+                                    <a href="#calculator" className="text-gray-700 hover:text-purple-600 transition">Calculator</a>
+                                    <a href="#how-it-works" className="text-gray-700 hover:text-purple-600 transition">How It Works</a>
+                                    <a href="#contact" className="text-gray-700 hover:text-purple-600 transition">Contact</a>
+                                </div>
+                                <a href="#contact" className="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition">
+                                    Get Free Quote
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <section className="pt-24 pb-16 gradient-bg text-white">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid md:grid-cols-2 gap-12 items-center">
+                                <div>
+                                    <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                                        Cut Your Electricity Bills by Up to 90%
+                                    </h1>
+                                    <p className="text-xl mb-8 text-purple-100">
+                                        Premium solar panels and battery storage solutions for Victorian homes. 
+                                        Expert installation, unbeatable warranties, and massive savings.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <a href="#calculator" className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-center">
+                                            Calculate Your Savings
+                                        </a>
+                                        <a href="#contact" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition text-center">
+                                            Get Free Quote
+                                        </a>
+                                    </div>
+                                    <div className="mt-8 flex items-center space-x-6">
+                                        <div>
+                                            <div className="flex text-yellow-300 text-xl">
+                                                <i className="fas fa-star"></i>
+                                                <i className="fas fa-star"></i>
+                                                <i className="fas fa-star"></i>
+                                                <i className="fas fa-star"></i>
+                                                <i className="fas fa-star"></i>
+                                            </div>
+                                            <p className="text-sm text-purple-100 mt-1">4.9/5 from 500+ reviews</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="floating hidden md:block">
+                                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23ffffff' opacity='0.1' width='400' height='300' rx='20'/%3E%3Ctext x='200' y='150' font-size='80' text-anchor='middle' fill='%23ffffff' opacity='0.3'%3E☀️🔋%3C/text%3E%3C/svg%3E" alt="Solar Illustration" className="w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Stats Section */}
+                    <section className="py-12 bg-white">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                                <div>
+                                    <div className="text-4xl font-bold gradient-text">2,000+</div>
+                                    <div className="text-gray-600 mt-2">Happy Customers</div>
+                                </div>
+                                <div>
+                                    <div className="text-4xl font-bold gradient-text">90%</div>
+                                    <div className="text-gray-600 mt-2">Bill Savings</div>
+                                </div>
+                                <div>
+                                    <div className="text-4xl font-bold gradient-text">25 Years</div>
+                                    <div className="text-gray-600 mt-2">Panel Warranty</div>
+                                </div>
+                                <div>
+                                    <div className="text-4xl font-bold gradient-text">15 Years</div>
+                                    <div className="text-gray-600 mt-2">Battery Warranty</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Benefits Section */}
+                    <section id="benefits" className="py-20 bg-gray-50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose AstroSolar?</h2>
+                                <p className="text-xl text-gray-600">Premium quality, expert installation, unbeatable value</p>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-8">
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">⚡</div>
+                                    <h3 className="text-xl font-bold mb-3">Maximum Savings</h3>
+                                    <p className="text-gray-600">Save up to 90% on your electricity bills with our premium solar and battery systems</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">🏆</div>
+                                    <h3 className="text-xl font-bold mb-3">Premium Quality</h3>
+                                    <p className="text-gray-600">Tier-1 solar panels and market-leading battery brands with industry-best warranties</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">👨‍🔧</div>
+                                    <h3 className="text-xl font-bold mb-3">Expert Installation</h3>
+                                    <p className="text-gray-600">CEC-accredited installers with 10+ years experience and flawless safety records</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">💰</div>
+                                    <h3 className="text-xl font-bold mb-3">Flexible Finance</h3>
+                                    <p className="text-gray-600">Interest-free payment plans available. Start saving from day one</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">🌱</div>
+                                    <h3 className="text-xl font-bold mb-3">Environmental Impact</h3>
+                                    <p className="text-gray-600">Reduce your carbon footprint by up to 4 tonnes per year</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition">
+                                    <div className="text-4xl mb-4">📞</div>
+                                    <h3 className="text-xl font-bold mb-3">Local Support</h3>
+                                    <p className="text-gray-600">Melbourne-based team available 7 days a week for ongoing support</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Calculator Section */}
+                    <SavingsCalculator />
+
+                    {/* How It Works */}
+                    <section id="how-it-works" className="py-20 bg-gray-50">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="text-center mb-16">
+                                <h2 className="text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
+                                <p className="text-xl text-gray-600">From quote to savings in 4 simple steps</p>
+                            </div>
+                            <div className="grid md:grid-cols-4 gap-8">
+                                <div className="text-center">
+                                    <div className="w-16 h-16 gradient-bg text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">1</div>
+                                    <h3 className="text-xl font-bold mb-2">Get Free Quote</h3>
+                                    <p className="text-gray-600">Fill out our form or chat with our AI assistant for instant sizing recommendations</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 gradient-bg text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">2</div>
+                                    <h3 className="text-xl font-bold mb-2">Site Assessment</h3>
+                                    <p className="text-gray-600">Our experts visit your home to design the perfect system for your needs</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 gradient-bg text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">3</div>
+                                    <h3 className="text-xl font-bold mb-2">Professional Installation</h3>
+                                    <p className="text-gray-600">CEC-accredited installers complete your system in 1-2 days</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-16 h-16 gradient-bg text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">4</div>
+                                    <h3 className="text-xl font-bold mb-2">Start Saving</h3>
+                                    <p className="text-gray-600">Watch your electricity bills plummet and enjoy energy independence</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Contact Form */}
+                    <ContactForm />
+
+                    {/* Footer */}
+                    <footer className="bg-gray-900 text-white py-12">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="grid md:grid-cols-4 gap-8">
+                                <div>
+                                    <div className="flex items-center mb-4">
+                                        <i className="fas fa-solar-panel text-2xl text-purple-400"></i>
+                                        <span className="ml-2 text-xl font-bold">AstroSolar</span>
+                                    </div>
+                                    <p className="text-gray-400">Premium solar and battery solutions for Victorian homes.</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-4">Quick Links</h4>
+                                    <ul className="space-y-2 text-gray-400">
+                                        <li><a href="#benefits" className="hover:text-white transition">Benefits</a></li>
+                                        <li><a href="#calculator" className="hover:text-white transition">Calculator</a></li>
+                                        <li><a href="#how-it-works" className="hover:text-white transition">How It Works</a></li>
+                                        <li><a href="#contact" className="hover:text-white transition">Contact</a></li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-4">Services</h4>
+                                    <ul className="space-y-2 text-gray-400">
+                                        <li>Solar Panel Installation</li>
+                                        <li>Battery Storage Systems</li>
+                                        <li>Solar + Battery Combo</li>
+                                        <li>System Maintenance</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold mb-4">Contact</h4>
+                                    <ul className="space-y-2 text-gray-400">
+                                        <li><i className="fas fa-phone mr-2"></i> 1300 ASTRO SOLAR</li>
+                                        <li><i className="fas fa-envelope mr-2"></i> info@astrosolar.com.au</li>
+                                        <li><i className="fas fa-map-marker-alt mr-2"></i> Melbourne, Victoria</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                                <p>&copy; 2024 AstroSolar. All rights reserved. | CEC Accredited Installer</p>
+                            </div>
+                        </div>
+                    </footer>
+
+                    {/* Chat Widget */}
+                    <ChatWidget />
+                </div>
+            );
+        }
+
+        function SavingsCalculator() {
+            const [formData, setFormData] = useState({
+                quarterlyBill: '',
+                hasSolar: 'no',
+                solarSize: '',
+                batterySize: '10',
+                dailyUsage: '20'
+            });
+            const [result, setResult] = useState(null);
+
+            const calculateSavings = () => {
+                const bill = parseFloat(formData.quarterlyBill);
+                const hasSolar = formData.hasSolar === 'yes';
+                const solarSize = parseFloat(formData.solarSize) || 6.6;
+                const batterySize = parseFloat(formData.batterySize);
+                const dailyUsage = parseFloat(formData.dailyUsage);
+
+                if (!bill || bill <= 0) {
+                    alert('Please enter a valid quarterly bill amount');
+                    return;
+                }
+
+                // Victorian electricity rates (approximate)
+                const peakRate = 0.30; // $/kWh
+                const offPeakRate = 0.18; // $/kWh
+                const feedInTariff = 0.05; // $/kWh
+
+                // Current annual cost
+                const annualCost = bill * 4;
+                const dailyCost = annualCost / 365;
+
+                // Solar generation (conservative estimate: 4 hours peak sun in Victoria)
+                const dailySolarGeneration = solarSize * 4; // kWh per day
+
+                // Battery storage benefit
+                const batteryCycles = 0.9; // 90% efficiency
+                const dailyBatteryStorage = Math.min(dailySolarGeneration * 0.6, batterySize); // Store 60% of solar generation
+                const batteryDischargeable = dailyBatteryStorage * batteryCycles;
+
+                // Savings calculation
+                let annualSavings;
+                
+                if (hasSolar) {
+                    // Already has solar, adding battery
+                    const currentExportRevenue = dailySolarGeneration * 0.4 * feedInTariff * 365; // Currently exporting 40%
+                    const newPeakSavings = batteryDischargeable * peakRate * 365; // Using stored power during peak
+                    const newExportRevenue = (dailySolarGeneration - dailyBatteryStorage) * feedInTariff * 365;
+                    
+                    annualSavings = (newPeakSavings + newExportRevenue) - currentExportRevenue;
+                } else {
+                    // Installing solar + battery
+                    const selfConsumption = Math.min(dailyUsage * 0.3, dailySolarGeneration); // 30% used during day
+                    const exported = Math.max(0, dailySolarGeneration - selfConsumption - dailyBatteryStorage);
+                    
+                    const solarSavings = selfConsumption * peakRate * 365;
+                    const batterySavings = batteryDischargeable * peakRate * 365;
+                    const exportRevenue = exported * feedInTariff * 365;
+                    
+                    annualSavings = solarSavings + batterySavings + exportRevenue;
+                }
+
+                // 25-year savings
+                const savingsYear25 = annualSavings * 23; // Years 3-25 (accounting for degradation)
+                
+                // System costs (approximate)
+                const solarCost = hasSolar ? 0 : solarSize * 1000;
+                const batteryCost = batterySize * 1000;
+                const totalCost = solarCost + batteryCost;
+                
+                // Victorian Solar Homes rebate
+                const rebate = hasSolar ? 1400 : 1400; // Battery rebate
+                const netCost = totalCost - rebate;
+
+                // Payback period
+                const paybackYears = netCost / annualSavings;
+
+                setResult({
+                    annualSavings: Math.round(annualSavings),
+                    monthlySavings: Math.round(annualSavings / 12),
+                    savingsYear25: Math.round(savingsYear25),
+                    systemCost: Math.round(totalCost),
+                    rebate: rebate,
+                    netCost: Math.round(netCost),
+                    paybackYears: paybackYears.toFixed(1),
+                    percentSavings: Math.round((annualSavings / annualCost) * 100),
+                    co2Reduction: Math.round(solarSize * 1.5) // Approximate tonnes per year
+                });
+            };
+
+            return (
+                <section id="calculator" className="py-20 bg-white">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4">Calculate Your Savings</h2>
+                            <p className="text-xl text-gray-600">See how much you could save with solar and battery storage</p>
+                        </div>
+
+                        <div className="calculator-card bg-white rounded-xl p-8 border border-gray-200">
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Your Quarterly Electricity Bill ($)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formData.quarterlyBill}
+                                        onChange={(e) => setFormData({...formData, quarterlyBill: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g., 600"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Do you already have solar panels?
+                                    </label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                value="no"
+                                                checked={formData.hasSolar === 'no'}
+                                                onChange={(e) => setFormData({...formData, hasSolar: e.target.value})}
+                                                className="mr-2"
+                                            />
+                                            <span>No</span>
+                                        </label>
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                value="yes"
+                                                checked={formData.hasSolar === 'yes'}
+                                                onChange={(e) => setFormData({...formData, hasSolar: e.target.value})}
+                                                className="mr-2"
+                                            />
+                                            <span>Yes</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {formData.hasSolar === 'no' && (
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Solar System Size (kW)
+                                        </label>
+                                        <select
+                                            value={formData.solarSize}
+                                            onChange={(e) => setFormData({...formData, solarSize: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        >
+                                            <option value="5">5 kW (Small home)</option>
+                                            <option value="6.6">6.6 kW (Medium home - Most Popular)</option>
+                                            <option value="10">10 kW (Large home)</option>
+                                            <option value="13">13 kW (Very large home)</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Battery Size (kWh)
+                                    </label>
+                                    <select
+                                        value={formData.batterySize}
+                                        onChange={(e) => setFormData({...formData, batterySize: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                    >
+                                        <option value="10">10 kWh (Tesla Powerwall 2)</option>
+                                        <option value="13.5">13.5 kWh (Tesla Powerwall 3)</option>
+                                        <option value="12.8">12.8 kWh (BYD Battery-Box Premium)</option>
+                                        <option value="15">15 kWh (Sungrow SBR)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Daily Energy Usage (kWh)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formData.dailyUsage}
+                                        onChange={(e) => setFormData({...formData, dailyUsage: e.target.value})}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        placeholder="e.g., 20"
+                                    />
+                                    <p className="text-sm text-gray-500 mt-1">Average Victorian home: 15-25 kWh/day</p>
+                                </div>
+
+                                <button
+                                    onClick={calculateSavings}
+                                    className="w-full gradient-bg text-white py-4 rounded-lg font-semibold hover:opacity-90 transition text-lg"
+                                >
+                                    Calculate My Savings
+                                </button>
+                            </div>
+
+                            {result && (
+                                <div className="mt-8 p-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border-2 border-purple-200">
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Your Potential Savings</h3>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                        <div className="bg-white p-4 rounded-lg shadow">
+                                            <div className="text-sm text-gray-600">Annual Savings</div>
+                                            <div className="text-3xl font-bold gradient-text">${result.annualSavings.toLocaleString()}</div>
+                                            <div className="text-sm text-gray-500">${result.monthlySavings}/month</div>
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow">
+                                            <div className="text-sm text-gray-600">25-Year Savings</div>
+                                            <div className="text-3xl font-bold gradient-text">${result.savingsYear25.toLocaleString()}</div>
+                                            <div className="text-sm text-gray-500">{result.percentSavings}% bill reduction</div>
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow">
+                                            <div className="text-sm text-gray-600">System Investment</div>
+                                            <div className="text-2xl font-bold text-gray-900">${result.netCost.toLocaleString()}</div>
+                                            <div className="text-sm text-green-600">After ${result.rebate} rebate</div>
+                                        </div>
+                                        <div className="bg-white p-4 rounded-lg shadow">
+                                            <div className="text-sm text-gray-600">Payback Period</div>
+                                            <div className="text-2xl font-bold text-gray-900">{result.paybackYears} years</div>
+                                            <div className="text-sm text-gray-500">{result.co2Reduction}t CO₂ saved/year</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-green-100 border border-green-300 rounded-lg p-4 text-center">
+                                        <p className="text-green-800 font-semibold">🎉 You're eligible for the Victorian Solar Homes Battery Rebate!</p>
+                                        <p className="text-green-700 text-sm mt-1">Save an additional ${result.rebate} on your battery installation</p>
+                                    </div>
+
+                                    <div className="mt-6 text-center">
+                                        <a href="#contact" className="inline-block gradient-bg text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition">
+                                            Get Your Free Quote Now
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-8 text-center text-sm text-gray-500">
+                            <p>* Savings calculated based on average Victorian electricity rates and solar generation. Actual savings may vary based on usage patterns, location, and system performance.</p>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        function ContactForm() {
+            const [formData, setFormData] = useState({
+                name: '',
+                email: '',
+                phone: '',
+                postcode: '',
+                interest: 'both',
+                message: ''
+            });
+            const [submitted, setSubmitted] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                // Here you would integrate with your backend/CRM
+                console.log('Form submitted:', formData);
+                
+                // For now, just show success message
+                setSubmitted(true);
+                setTimeout(() => {
+                    setSubmitted(false);
+                    setFormData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        postcode: '',
+                        interest: 'both',
+                        message: ''
+                    });
+                }, 3000);
+            };
+
+            return (
+                <section id="contact" className="py-20 bg-gradient-to-br from-purple-50 to-indigo-50">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4">Get Your Free Quote</h2>
+                            <p className="text-xl text-gray-600">No obligation. Response within 2 hours.</p>
+                        </div>
+
+                        <div className="bg-white rounded-xl shadow-xl p-8">
+                            {submitted ? (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">✅</div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
+                                    <p className="text-gray-600">We'll contact you within 2 hours with your personalized quote.</p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Full Name *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formData.name}
+                                                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                placeholder="John Smith"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Email Address *
+                                            </label>
+                                            <input
+                                                type="email"
+                                                required
+                                                value={formData.email}
+                                                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                placeholder="john@example.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Phone Number *
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={formData.phone}
+                                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                placeholder="0412 345 678"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Postcode *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formData.postcode}
+                                                onChange={(e) => setFormData({...formData, postcode: e.target.value})}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                                placeholder="3000"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            I'm interested in *
+                                        </label>
+                                        <select
+                                            value={formData.interest}
+                                            onChange={(e) => setFormData({...formData, interest: e.target.value})}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        >
+                                            <option value="both">Solar Panels + Battery Storage</option>
+                                            <option value="solar">Solar Panels Only</option>
+                                            <option value="battery">Battery Storage Only</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Additional Information (Optional)
+                                        </label>
+                                        <textarea
+                                            value={formData.message}
+                                            onChange={(e) => setFormData({...formData, message: e.target.value})}
+                                            rows="4"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            placeholder="Tell us about your property, current electricity usage, or any specific requirements..."
+                                        ></textarea>
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        className="w-full gradient-bg text-white py-4 rounded-lg font-semibold hover:opacity-90 transition text-lg"
+                                    >
+                                        Get My Free Quote
+                                    </button>
+
+                                    <p className="text-sm text-gray-500 text-center">
+                                        By submitting this form, you agree to be contacted about solar solutions. We respect your privacy.
+                                    </p>
+                                </form>
+                            )}
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
+        function ChatWidget() {
+            const [isOpen, setIsOpen] = useState(false);
+            const [messages, setMessages] = useState([
+                { role: 'assistant', content: 'Hi! 👋 I\'m your Solar AI Assistant. I can help you understand solar panels, battery storage, savings estimates, and answer any questions about going solar. What would you like to know?' }
+            ]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages]);
+
+            const sendMessage = async () => {
+                if (!input.trim() || isLoading) return;
+
+                const userMessage = input.trim();
+                setInput('');
+                setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+                setIsLoading(true);
+
+                try {
+                    let response;
+                    
+                    if (API_CONFIG.provider === 'openai' && API_CONFIG.openaiKey !== 'YOUR_OPENAI_API_KEY_HERE') {
+                        response = await fetch('https://api.openai.com/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${API_CONFIG.openaiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-4',
+                                messages: [
+                                    { 
+                                        role: 'system', 
+                                        content: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.' 
+                                    },
+                                    ...messages.map(m => ({ role: m.role, content: m.content })),
+                                    { role: 'user', content: userMessage }
+                                ],
+                                max_tokens: 500,
+                                temperature: 0.7
+                            })
+                        });
+
+                        const data = await response.json();
+                        const aiMessage = data.choices[0].message.content;
+                        setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
+                        
+                    } else if (API_CONFIG.provider === 'anthropic' && API_CONFIG.anthropicKey !== 'YOUR_ANTHROPIC_API_KEY_HERE') {
+                        response = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-api-key': API_CONFIG.anthropicKey,
+                                'anthropic-version': '2023-06-01'
+                            },
+                            body: JSON.stringify({
+                                model: 'claude-3-5-sonnet-20241022',
+                                max_tokens: 1024,
+                                messages: [
+                                    ...messages.filter(m => m.role !== 'assistant' || m.content).map(m => ({
+                                        role: m.role === 'assistant' ? 'assistant' : 'user',
+                                        content: m.content
+                                    })),
+                                    { role: 'user', content: userMessage }
+                                ],
+                                system: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.'
+                            })
+                        });
+
+                        const data = await response.json();
+                        const aiMessage = data.content[0].text;
+                        setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
+                    } else {
+                        // Demo mode - predefined responses
+                        const demoResponse = getDemoResponse(userMessage);
+                        setTimeout(() => {
+                            setMessages(prev => [...prev, { role: 'assistant', content: demoResponse }]);
+                            setIsLoading(false);
+                        }, 1000);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    setMessages(prev => [...prev, { 
+                        role: 'assistant', 
+                        content: 'I apologize, but I\'m having trouble connecting right now. Please fill out our contact form and our team will get back to you within 2 hours!' 
+                    }]);
+                }
+
+                setIsLoading(false);
+            };
+
+            const getDemoResponse = (message) => {
+                const lower = message.toLowerCase();
+                
+                if (lower.includes('cost') || lower.includes('price') || lower.includes('how much')) {
+                    return 'Solar and battery costs vary based on system size and your specific needs. For a typical Victorian home:\n\n• 6.6kW solar system: $5,500-$7,500 (after rebates)\n• 10kWh battery: $8,000-$12,000 (after $1,400 VIC rebate)\n\nUse our calculator above for a personalized estimate, or fill out the contact form for a detailed quote!';
+                }
+                
+                if (lower.includes('save') || lower.includes('saving')) {
+                    return 'Most Victorian homes save 60-90% on electricity bills! With Time of Use tariffs, a battery can save an additional $1,000-$2,000 annually by storing cheap off-peak energy.\n\nTry our savings calculator above to see your potential savings, or get a personalized assessment by contacting us!';
+                }
+                
+                if (lower.includes('rebate') || lower.includes('incentive')) {
+                    return 'Victoria offers excellent rebates:\n\n• Solar Homes Battery Rebate: $1,400\n• Interest-free loans available\n• Federal STCs reduce upfront costs\n\nYou could save thousands! Contact us to check your eligibility.';
+                }
+                
+                if (lower.includes('battery') || lower.includes('storage')) {
+                    return 'Battery storage lets you use solar power at night! Popular options include:\n\n• Tesla Powerwall (13.5kWh)\n• BYD Battery-Box (up to 15kWh)\n• Sungrow batteries\n\nAll come with 10-15 year warranties. Want to know which suits your home? Fill out our contact form!';
+                }
+                
+                if (lower.includes('install') || lower.includes('installation')) {
+                    return 'Our CEC-accredited installers typically complete installations in 1-2 days! The process:\n\n1. Free site assessment\n2. Custom system design\n3. Professional installation\n4. Grid connection & activation\n\nMost customers are saving money within 2 weeks. Get started with a free quote!';
+                }
+                
+                return 'Great question! I can help with:\n\n• System sizing and costs\n• Savings estimates\n• Battery recommendations\n• Victorian rebates\n• Installation process\n\nFor detailed, personalized advice, I recommend filling out our contact form. Our team responds within 2 hours!';
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            };
+
+            return (
+                <>
+                    {/* Chat Button */}
+                    {!isOpen && (
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className="fixed bottom-6 right-6 gradient-bg text-white p-4 rounded-full shadow-2xl hover:opacity-90 transition z-50 flex items-center space-x-2"
+                        >
+                            <i className="fas fa-comments text-2xl"></i>
+                            <span className="font-semibold pr-2">Ask Solar AI</span>
+                        </button>
+                    )}
+
+                    {/* Chat Window */}
+                    {isOpen && (
+                        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 chat-container">
+                            {/* Header */}
+                            <div className="gradient-bg text-white p-4 rounded-t-2xl flex justify-between items-center">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                                        <i className="fas fa-robot text-purple-600 text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="font-bold">Solar AI Assistant</div>
+                                        <div className="text-xs text-purple-100">Online • Instant responses</div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="text-white hover:text-gray-200 transition"
+                                >
+                                    <i className="fas fa-times text-xl"></i>
+                                </button>
+                            </div>
+
+                            {/* Messages */}
+                            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 hide-scrollbar">
+                                {messages.map((msg, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} chat-bubble`}
+                                    >
+                                        <div
+                                            className={`max-w-[80%] p-3 rounded-lg ${
+                                                msg.role === 'user'
+                                                    ? 'gradient-bg text-white'
+                                                    : 'bg-white text-gray-800 shadow'
+                                            }`}
+                                        >
+                                            <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {isLoading && (
+                                    <div className="flex justify-start chat-bubble">
+                                        <div className="bg-white text-gray-800 p-3 rounded-lg shadow">
+                                            <div className="flex space-x-2">
+                                                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"></div>
+                                                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                                <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Input */}
+                            <div className="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
+                                <div className="flex space-x-2">
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        placeholder="Ask about solar, batteries, savings..."
+                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        onClick={sendMessage}
+                                        disabled={isLoading || !input.trim()}
+                                        className="gradient-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50"
+                                    >
+                                        <i className="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-2 text-center">
+                                    {API_CONFIG.openaiKey === 'YOUR_OPENAI_API_KEY_HERE' && API_CONFIG.anthropicKey === 'YOUR_ANTHROPIC_API_KEY_HERE' 
+                                        ? 'Demo mode - Add API key for AI responses' 
+                                        : 'Powered by AI'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
