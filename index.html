@@ -121,6 +121,7 @@
                                     <a href="#benefits" className="text-gray-700 hover:text-slate-700 transition">Benefits</a>
                                     <a href="#calculator" className="text-gray-700 hover:text-slate-700 transition">Calculator</a>
                                     <a href="#how-it-works" className="text-gray-700 hover:text-slate-700 transition">How It Works</a>
+                                    <a href="#ai-chat" className="text-gray-700 hover:text-slate-700 transition">AI Chat</a>
                                     <a href="#contact" className="text-gray-700 hover:text-slate-700 transition">Contact</a>
                                 </div>
                                 <a href="#contact" className="gradient-bg text-white px-6 py-2 rounded-lg hover:opacity-90 transition">
@@ -280,6 +281,9 @@
                         </div>
                     </section>
 
+                    {/* AI Chat Assistant Section */}
+                    <AIChatSection />
+
                     {/* Contact Form */}
                     <ContactForm />
 
@@ -326,9 +330,6 @@
                             </div>
                         </div>
                     </footer>
-
-                    {/* Chat Widget */}
-                    <ChatWidget />
                 </div>
             );
         }
@@ -578,6 +579,189 @@
             );
         }
 
+        function AIChatSection() {
+            const [messages, setMessages] = useState([
+                { role: 'assistant', content: 'Hi! 👋 I\'m your Solar AI Assistant. I can help you understand solar panels, battery storage, savings estimates, Victorian rebates, and answer any questions about going solar. What would you like to know?' }
+            ]);
+            const [input, setInput] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages]);
+
+            const sendMessage = async () => {
+                if (!input.trim() || isLoading) return;
+
+                const userMessage = input.trim();
+                setInput('');
+                setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+                setIsLoading(true);
+
+                try {
+                    // Call Vercel serverless function (API key is secure on server)
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                { 
+                                    role: 'system', 
+                                    content: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.' 
+                                },
+                                ...messages.map(m => ({ role: m.role, content: m.content })),
+                                { role: 'user', content: userMessage }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('API request failed');
+                    }
+
+                    const data = await response.json();
+                    const aiMessage = data.choices[0].message.content;
+                    setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    
+                    // Fallback to demo mode if API fails
+                    const demoResponse = getDemoResponse(userMessage);
+                    setMessages(prev => [...prev, { role: 'assistant', content: demoResponse }]);
+                }
+
+                setIsLoading(false);
+            };
+
+            const getDemoResponse = (message) => {
+                const lower = message.toLowerCase();
+                
+                if (lower.includes('cost') || lower.includes('price') || lower.includes('how much')) {
+                    return 'Solar and battery costs vary based on system size and your specific needs. For a typical Victorian home:\n\n• 6.6kW solar system: $5,500-$7,500 (after rebates)\n• 10kWh battery: $8,000-$12,000 (after $1,400 VIC rebate)\n\nUse our calculator above for a personalized estimate, or fill out the contact form for a detailed quote!';
+                }
+                
+                if (lower.includes('save') || lower.includes('saving')) {
+                    return 'Most Victorian homes save 60-90% on electricity bills! With Time of Use tariffs, a battery can save an additional $1,000-$2,000 annually by storing cheap off-peak energy.\n\nTry our savings calculator above to see your potential savings, or get a personalized assessment by contacting us!';
+                }
+                
+                if (lower.includes('rebate') || lower.includes('incentive')) {
+                    return 'Victoria offers excellent rebates:\n\n• Solar Homes Battery Rebate: $1,400\n• Interest-free loans available\n• Federal STCs reduce upfront costs\n\nYou could save thousands! Contact us to check your eligibility.';
+                }
+                
+                if (lower.includes('battery') || lower.includes('storage')) {
+                    return 'Battery storage lets you use solar power at night! Popular options include:\n\n• Tesla Powerwall (13.5kWh)\n• BYD Battery-Box (up to 15kWh)\n• Sungrow batteries\n\nAll come with 10-15 year warranties. Want to know which suits your home? Fill out our contact form!';
+                }
+                
+                if (lower.includes('install') || lower.includes('installation')) {
+                    return 'Our CEC-accredited installers typically complete installations in 1-2 days! The process:\n\n1. Free site assessment\n2. Custom system design\n3. Professional installation\n4. Grid connection & activation\n\nMost customers are saving money within 2 weeks. Get started with a free quote!';
+                }
+                
+                return 'Great question! I can help with:\n\n• System sizing and costs\n• Savings estimates\n• Battery recommendations\n• Victorian rebates\n• Installation process\n\nFor detailed, personalized advice, I recommend filling out our contact form. Our team responds within 2 hours!';
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            };
+
+            return (
+                <section id="ai-chat" className="py-20 bg-white">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4">Ask Our Solar AI Assistant</h2>
+                            <p className="text-xl text-gray-600">Get instant answers about solar panels, batteries, savings, and rebates</p>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+                            {/* Chat Header */}
+                            <div className="gradient-bg text-white p-6">
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                                        <i className="fas fa-robot text-slate-700 text-2xl"></i>
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-lg">Solar AI Assistant</div>
+                                        <div className="text-sm text-slate-100">Online • Instant responses</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Messages */}
+                            <div className="h-96 overflow-y-auto p-6 space-y-4 bg-white hide-scrollbar">
+                                {messages.map((msg, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} chat-bubble`}
+                                    >
+                                        <div
+                                            className={`max-w-[80%] p-4 rounded-xl ${
+                                                msg.role === 'user'
+                                                    ? 'gradient-bg text-white'
+                                                    : 'bg-gradient-to-br from-slate-100 to-gray-100 text-gray-800 shadow-md'
+                                            }`}
+                                        >
+                                            <div className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                                {isLoading && (
+                                    <div className="flex justify-start chat-bubble">
+                                        <div className="bg-gradient-to-br from-slate-100 to-gray-100 text-gray-800 p-4 rounded-xl shadow-md">
+                                            <div className="flex space-x-2">
+                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce"></div>
+                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                <div ref={messagesEndRef} />
+                            </div>
+
+                            {/* Input */}
+                            <div className="p-6 bg-gradient-to-br from-slate-50 to-gray-50 border-t border-gray-200">
+                                <div className="flex space-x-3">
+                                    <input
+                                        type="text"
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        placeholder="Ask about solar, batteries, savings, rebates..."
+                                        className="flex-1 px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-slate-500 focus:border-transparent text-lg"
+                                        disabled={isLoading}
+                                    />
+                                    <button
+                                        onClick={sendMessage}
+                                        disabled={isLoading || !input.trim()}
+                                        className="gradient-bg text-white px-6 py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50 font-semibold"
+                                    >
+                                        <i className="fas fa-paper-plane text-lg"></i>
+                                    </button>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-3 text-center">
+                                    Powered by AI • Get personalized quotes by filling the form below
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 text-center">
+                            <p className="text-gray-600">Want a detailed quote? Our team responds within 2 hours 👇</p>
+                        </div>
+                    </div>
+                </section>
+            );
+        }
+
         function ContactForm() {
             const [formData, setFormData] = useState({
                 name: '',
@@ -784,201 +968,6 @@
                         </div>
                     </div>
                 </section>
-            );
-        }
-
-        function ChatWidget() {
-            const [isOpen, setIsOpen] = useState(false);
-            const [messages, setMessages] = useState([
-                { role: 'assistant', content: 'Hi! 👋 I\'m your Solar AI Assistant. I can help you understand solar panels, battery storage, savings estimates, and answer any questions about going solar. What would you like to know?' }
-            ]);
-            const [input, setInput] = useState('');
-            const [isLoading, setIsLoading] = useState(false);
-            const messagesEndRef = useRef(null);
-
-            const scrollToBottom = () => {
-                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-            };
-
-            useEffect(() => {
-                scrollToBottom();
-            }, [messages]);
-
-            const sendMessage = async () => {
-                if (!input.trim() || isLoading) return;
-
-                const userMessage = input.trim();
-                setInput('');
-                setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-                setIsLoading(true);
-
-                try {
-                    // Call Vercel serverless function (API key is secure on server)
-                    const response = await fetch('/api/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            messages: [
-                                { 
-                                    role: 'system', 
-                                    content: 'You are a helpful solar energy expert assistant for AstroSolar, a Victorian solar and battery installation company. Provide accurate, friendly advice about solar panels, battery storage, savings, rebates, and installation processes. Keep responses concise and helpful. Mention that customers can fill out the contact form for personalized quotes.' 
-                                },
-                                ...messages.map(m => ({ role: m.role, content: m.content })),
-                                { role: 'user', content: userMessage }
-                            ]
-                        })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('API request failed');
-                    }
-
-                    const data = await response.json();
-                    const aiMessage = data.choices[0].message.content;
-                    setMessages(prev => [...prev, { role: 'assistant', content: aiMessage }]);
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    
-                    // Fallback to demo mode if API fails
-                    const demoResponse = getDemoResponse(userMessage);
-                    setMessages(prev => [...prev, { role: 'assistant', content: demoResponse }]);
-                }
-
-                setIsLoading(false);
-            };
-
-            const getDemoResponse = (message) => {
-                const lower = message.toLowerCase();
-                
-                if (lower.includes('cost') || lower.includes('price') || lower.includes('how much')) {
-                    return 'Solar and battery costs vary based on system size and your specific needs. For a typical Victorian home:\n\n• 6.6kW solar system: $5,500-$7,500 (after rebates)\n• 10kWh battery: $8,000-$12,000 (after $1,400 VIC rebate)\n\nUse our calculator above for a personalized estimate, or fill out the contact form for a detailed quote!';
-                }
-                
-                if (lower.includes('save') || lower.includes('saving')) {
-                    return 'Most Victorian homes save 60-90% on electricity bills! With Time of Use tariffs, a battery can save an additional $1,000-$2,000 annually by storing cheap off-peak energy.\n\nTry our savings calculator above to see your potential savings, or get a personalized assessment by contacting us!';
-                }
-                
-                if (lower.includes('rebate') || lower.includes('incentive')) {
-                    return 'Victoria offers excellent rebates:\n\n• Solar Homes Battery Rebate: $1,400\n• Interest-free loans available\n• Federal STCs reduce upfront costs\n\nYou could save thousands! Contact us to check your eligibility.';
-                }
-                
-                if (lower.includes('battery') || lower.includes('storage')) {
-                    return 'Battery storage lets you use solar power at night! Popular options include:\n\n• Tesla Powerwall (13.5kWh)\n• BYD Battery-Box (up to 15kWh)\n• Sungrow batteries\n\nAll come with 10-15 year warranties. Want to know which suits your home? Fill out our contact form!';
-                }
-                
-                if (lower.includes('install') || lower.includes('installation')) {
-                    return 'Our CEC-accredited installers typically complete installations in 1-2 days! The process:\n\n1. Free site assessment\n2. Custom system design\n3. Professional installation\n4. Grid connection & activation\n\nMost customers are saving money within 2 weeks. Get started with a free quote!';
-                }
-                
-                return 'Great question! I can help with:\n\n• System sizing and costs\n• Savings estimates\n• Battery recommendations\n• Victorian rebates\n• Installation process\n\nFor detailed, personalized advice, I recommend filling out our contact form. Our team responds within 2 hours!';
-            };
-
-            const handleKeyPress = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            };
-
-            return (
-                <>
-                    {/* Chat Button */}
-                    {!isOpen && (
-                        <button
-                            onClick={() => setIsOpen(true)}
-                            className="fixed bottom-6 right-6 gradient-bg text-white p-4 rounded-full shadow-2xl hover:opacity-90 transition z-50 flex items-center space-x-2"
-                        >
-                            <i className="fas fa-comments text-2xl"></i>
-                            <span className="font-semibold pr-2">Ask Solar AI</span>
-                        </button>
-                    )}
-
-                    {/* Chat Window */}
-                    {isOpen && (
-                        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 chat-container">
-                            {/* Header */}
-                            <div className="gradient-bg text-white p-4 rounded-t-2xl flex justify-between items-center">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                                        <i className="fas fa-robot text-slate-700 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <div className="font-bold">Solar AI Assistant</div>
-                                        <div className="text-xs text-slate-100">Online • Instant responses</div>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="text-white hover:text-gray-200 transition"
-                                >
-                                    <i className="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-
-                            {/* Messages */}
-                            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 hide-scrollbar">
-                                {messages.map((msg, idx) => (
-                                    <div
-                                        key={idx}
-                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} chat-bubble`}
-                                    >
-                                        <div
-                                            className={`max-w-[80%] p-3 rounded-lg ${
-                                                msg.role === 'user'
-                                                    ? 'gradient-bg text-white'
-                                                    : 'bg-white text-gray-800 shadow'
-                                            }`}
-                                        >
-                                            <div className="text-sm whitespace-pre-wrap">{msg.content}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {isLoading && (
-                                    <div className="flex justify-start chat-bubble">
-                                        <div className="bg-white text-gray-800 p-3 rounded-lg shadow">
-                                            <div className="flex space-x-2">
-                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce"></div>
-                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                                                <div className="w-2 h-2 bg-slate-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div ref={messagesEndRef} />
-                            </div>
-
-                            {/* Input */}
-                            <div className="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
-                                <div className="flex space-x-2">
-                                    <input
-                                        type="text"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        onKeyPress={handleKeyPress}
-                                        placeholder="Ask about solar, batteries, savings..."
-                                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                                        disabled={isLoading}
-                                    />
-                                    <button
-                                        onClick={sendMessage}
-                                        disabled={isLoading || !input.trim()}
-                                        className="gradient-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50"
-                                    >
-                                        <i className="fas fa-paper-plane"></i>
-                                    </button>
-                                </div>
-                                <div className="text-xs text-gray-500 mt-2 text-center">
-                                    {API_CONFIG.openaiKey === 'YOUR_OPENAI_API_KEY_HERE' && API_CONFIG.anthropicKey === 'YOUR_ANTHROPIC_API_KEY_HERE' 
-                                        ? 'Demo mode - Add API key for AI responses' 
-                                        : 'Powered by AI'}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </>
             );
         }
 
